@@ -6,6 +6,11 @@
 #
 # https://github.com/robik/airshell
 
+# Airshell prefix without trailing slash
+if [ -z "$ASH_PREFIX" ]; then
+    ASH_PREFIX="$HOME/.config/airshell"
+fi
+    
 # If not interactive, skip
 [ -z "$PS1" ] && return
 
@@ -13,74 +18,6 @@
 if [ -f /etc/bash.bashrc ]; then
     source /etc/bash.bashrc
 fi
-
-# Airshell prefix without trailing slash
-ASH_PREFIX="$HOME/.config/airshell"
-mkdir -p $ASH_PREFIX
-
-ash_check_powerline_symbols()
-{
-    local found_font=0
-    local dirs=( "$HOME/.fonts" "/usr/share/fonts/X11/misc" )
-    for font_dir in "${dirs[@]}"; do
-        if [ -d "$font_dir" ]; then
-            if [ -f "$font_dir/PowerlineSymbols.otf" ]; then
-                found_font=1
-                break;
-            fi
-        fi
-    done
-    
-    if [[ ! -f "$ASH_PREFIX/config/ignore-symbols-question" && $found_font -eq 0 ]]; then
-        local answer=""
-        printf "\e[1;33mWarning\e[0m: Powerline symbols have not been found!\n"
-        printf "Those symbols are not required, however you may see weird characters command prompt. "
-        printf "If you don't want to install them, you can change Airshell configuration to use different "
-        printf "characters (RIGHT_MODULE_DELIM and LEFT_MODULE_DELIM variables).\n"
-        printf "Do want to install Powerline Symbols? \e[1m[Y]es \e[0m[n]o [i]gnore: "
-        read answer
-        
-        case "$answer" in
-            'n'|'N')
-                ;;
-                
-            'i'|'I')
-                mkdir -p "$ASH_PREFIX/config"
-                touch "$ASH_PREFIX/config/ignore-symbols-question"
-                echo "Ignored!"
-                ;;
-                
-            *)
-                ash_install_powerline_symbols
-                ;;
-        esac
-    fi
-}  
-
-ash_install_powerline_symbols()
-{
-    echo "Downloading..."
-    pushd /tmp
-    mkdir -p $HOME/.fonts
-    mkdir -p $HOME/.config/fontconfig/conf.d/
-    
-    # As specified in https://powerline.readthedocs.org/en/latest/installation/linux.html#font-installation
-    [ ! -f "PowerlineSymbols.otf" ] && wget https://github.com/Lokaltog/powerline/raw/develop/font/PowerlineSymbols.otf
-    [ ! -f "10-powerline-symbols.conf" ] && wget https://github.com/Lokaltog/powerline/raw/develop/font/10-powerline-symbols.conf
-    mv PowerlineSymbols.otf $HOME/.fonts/
-    mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
-    popd
-    echo "Updating font cache"
-    sudo fc-cache -vf ~/.fonts/
-    
-    if [ $? ]; then
-        echo "Success! If you still can't see symbols, try rebooting to apply the changes."
-    else
-        echo "Error while updating fontconfig cache"
-    fi
-}
-
-ash_check_powerline_symbols
 
 # Copies module colors from $1 to $2
 ash_copy_module_colors()
