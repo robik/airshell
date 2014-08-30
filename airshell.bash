@@ -27,12 +27,12 @@ ash_check_powerline_symbols()
         fi
     done
     
-    if [[ ! -f "$HOME/.config/airshell/ignore-symbols-question" && $found_font -eq 0 ]]; then
+    if [[ ! -f "$HOME/.config/airshell/config/ignore-symbols-question" && $found_font -eq 0 ]]; then
         local answer=""
         printf "\e[1;33mWarning\e[0m: Powerline symbols have not been found!\n"
         printf "Those symbols are not required, however you may see weird characters command prompt. "
         printf "If you don't want to install them, you can change Airshell configuration to use different "
-        printf "characters (LEFT_ARR and RIGHT_ARR variables).\n"
+        printf "characters (RIGHT_MODULE_DELIM and LEFT_MODULE_DELIM variables).\n"
         printf "Do want to install Powerline Symbols? \e[1m[Y]es \e[0m[n]o [i]gnore: "
         read answer
         
@@ -41,8 +41,8 @@ ash_check_powerline_symbols()
                 ;;
                 
             'i'|'I')
-                mkdir -p "$HOME/.config/airshell"
-                touch "$HOME/.config/airshell/ignore-symbols-question"
+                mkdir -p "$HOME/.config/airshell/config"
+                touch "$HOME/.config/airshell/config/ignore-symbols-question"
                 echo "Ignored!"
                 ;;
                 
@@ -87,9 +87,15 @@ ash_copy_module_colors()
     eval "MODULE_${target^^}_FG=\"\$MODULE_${source^^}_FG\""
 }
 
+REGISTERED_MODULES=()
+ash_register_module()
+{
+    REGISTERED_MODULES+=("$1")
+}
+
 # Arrays delimeting components in header bar
-LEFT_ARR="" #"\ue0b2"
-RIGHT_ARR="\ue0b0"
+RIGHT_MODULE_DELIM="" #"\ue0b2"
+LEFT_MODULE_DELIM="\ue0b0"
 BRANCH_CHAR="\ue0a0"
 
 LEFT_MODULES=(ssh user path)
@@ -137,6 +143,21 @@ if [ -f ~/.config/airshell/theme ]; then
     source ~/.config/airshell/theme
 fi
 
+# Include external modules
+if [ -d ~/.config/airshell/modules ]; then
+    for file in $(ls ~/.config/airshell/modules | egrep '\.(ba)?sh$'); do
+        source "$HOME/.config/airshell/modules/$file"
+    done
+fi
+
+# Validate module list
+for module in ${LEFT_MODULES[@]} ${RIGHT_MODULES[@]}; do
+    echo "${REGISTERED_MODULES[@]}" | grep -q "$module"
+    if [[ ! $? -eq 0 ]]; then
+        printf "\e[1;31mError\e[0m: Unknown module '$module' is used\n"
+    fi
+done
+
 echo ${LEFT_MODULES[@]} ${RIGHT_MODULES[@]} | grep -q git
 if [[ $? && ! -x "$(which git)" ]]; then
     printf "\e[1;31mConfiguration Error\e[0m: Git command not found. Either install git or remove git module.\n"
@@ -179,66 +200,6 @@ ash_mod_prop()
     fi
 }
 
-ash_module_ssh()
-{
-    if [ -n "$SSH_CLIENT" ]; then
-        ash_return_text "SSH"
-    else
-        ash_return_none
-    fi
-}
-
-ash_module_user()
-{
-    ash_return_text "$(whoami)"
-}
-
-ash_module_host()
-{
-    ash_return_text "$(uname -n)"
-}
-
-ash_module_path()
-{
-    ash_return_text "$(pwd | sed -e "s/^\/home\/$(whoami)/~/")"
-}
-
-ash_module_user_char()
-{
-    if [ `id -u` -eq 0 ]; then
-        ash_return_text "#"
-    else
-        ash_return_text "$"
-    fi
-}
-
-ash_module_git()
-{
-    if [[ ! -x $(which git) ]]; then
-        ash_return_none;
-        return;
-    fi
-    
-    local res="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
-    if [ "$res" != "" ]; then
-        ash_return_text "$BRANCH_CHAR $res" `expr ${#res} + 2`
-    else
-        ash_return_none
-    fi
-}
-
-ash_module_venv()
-{
-    [ -z "$VIRTUAL_ENV" ] && { ash_return_none; return; }
-    
-    ash_return_text "(env)"
-}
-
-ash_module_date()
-{
-    ash_return_text "$(date +'%H:%M:%S')"
-}
-
 # Fills row with spaced with specified color.
 ash_fill_row()
 {
@@ -256,6 +217,7 @@ ash_build_left_side()
     local modules=()
     local modules_len=0
     local modules_i=1
+    local module_results=()
     
     # Filter out empty modules
     for ((i=0;i<${#LEFT_MODULES[@]};i++)); do
@@ -263,19 +225,21 @@ ash_build_left_side()
         eval "ash_module_$module"
         
         [ "$MODULE_RESULT" = "" ] && continue
+        module_results+=("$MODULE_RESULT")
         modules+=("$module")
         ((modules_len++))
     done
     
+    modules_i=0
     # Display filtered modules
     for module in "${modules[@]}"; do
-        eval "ash_module_$module"
+        #echo ">> ${module_results[$modules_i]}"
         printf "\e[%s;48;%sm" $(ash_mod_prop $module FG) $(ash_mod_prop $module BG)
-        printf " $MODULE_RESULT \e[0m"
+        printf " ${module_results[$modules_i]} \e[0m"
         
-        if [ $modules_i -lt $modules_len ]; then
-            local next_module="${modules[$modules_i]}"
-            printf "\e[38;%s;48;%sm$RIGHT_ARR" $(ash_mod_prop $module BG) $(ash_mod_prop $next_module BG)
+        if [ $modules_i -lt `expr $modules_len - 1` ]; then
+            local next_module="${modules[$modules_i+1]}"
+            printf "\e[38;%s;48;%sm$LEFT_MODULE_DELIM" $(ash_mod_prop $module BG) $(ash_mod_prop $next_module BG)
         fi
         ((modules_i++))
     done
@@ -286,6 +250,8 @@ ash_build_right_side()
     local modules=()
     local modules_len=0
     local modules_i=1
+    local module_results=()
+    local module_lengths=()
     
     # Goto end of the line
     printf "\e[299C"
@@ -296,32 +262,35 @@ ash_build_right_side()
         eval "ash_module_$module"
         
         [ "$MODULE_RESULT" = "" ] && continue
+        module_results+=("$MODULE_RESULT")
+        module_lengths+=("$MODULE_LENGTH")
         modules+=("$module")
         ((modules_len++))
     done
     
+    modules_i=0
     for module in "${modules[@]}"; do
-        eval "ash_module_$module"
+        local module_length="${module_lengths[$modules_i]}"
         
-        if [ "$LEFT_ARR" != "" ]; then
-            ((MODULE_LENGTH+=2))
-            printf "\e[${MODULE_LENGTH}D"
+        if [ "$RIGHT_MODULE_DELIM" != "" ]; then
+            ((module_length+=2))
+            printf "\e[${module_length}D"
             
-            if [ $modules_i -lt $modules_len ]; then
-                local next_module="${modules[$modules_i]}"
-                printf "\e[38;%s;48;%sm$LEFT_ARR" $(ash_mod_prop $module BG) $(ash_mod_prop $next_module BG)
+            if [ $modules_i -lt `expr $modules_len - 1` ]; then
+                local next_module="${modules[$modules_i-1]}"
+                printf "\e[38;%s;48;%sm$RIGHT_MODULE_DELIM" $(ash_mod_prop $module BG) $(ash_mod_prop $next_module BG)
             else
-                printf "\e[38;%s;48;%sm$LEFT_ARR" $(ash_mod_prop $module BG) $COLOR_HEADER_BG
+                printf "\e[38;%s;48;%sm$RIGHT_MODULE_DELIM" $(ash_mod_prop $module BG) $COLOR_HEADER_BG
             fi
         else
-            ((MODULE_LENGTH+=1))
-            printf "\e[${MODULE_LENGTH}D"
+            ((module_length+=1))
+            printf "\e[${module_length}D"
         fi
-        ((modules_i+=1))
         printf "\e[%s;48;%sm" $(ash_mod_prop $module FG) $(ash_mod_prop $module BG)
-        printf " $MODULE_RESULT "
-        ((MODULE_LENGTH+=2))
-        printf "\e[${MODULE_LENGTH}D"
+        printf " ${module_results[$modules_i]} "
+        ((module_length+=2))
+        printf "\e[${module_length}D"
+        ((modules_i+=1))
     done
     
     printf "\e[299C\e[0m\n"
@@ -349,14 +318,14 @@ ash_build_ps1()
     
     local module="$PS1_MODULE"
     printf "\[\e[48;%s;%sm\] \$(ash_print_module $module) " "\$(ash_mod_prop $module BG)" "\$(ash_mod_prop $module FG)"
-    printf "\[\e[0;38;%sm\]$RIGHT_ARR \[$TERM_RESET\]" $(ash_mod_prop $module BG)
+    printf "\[\e[0;38;%sm\]$LEFT_MODULE_DELIM \[$TERM_RESET\]" $(ash_mod_prop $module BG)
 }
 
 ash_build_ps2()
 {
     local module="$PS1_MODULE"
     printf "\[\e[48;%s;%sm\] \$PS2_CHAR " $(ash_mod_prop $module BG) $(ash_mod_prop $module FG)
-    printf "\[\e[0;38;%sm\]$RIGHT_ARR \[$TERM_RESET\]" $(ash_mod_prop $module BG)
+    printf "\[\e[0;38;%sm\]$LEFT_MODULE_DELIM \[$TERM_RESET\]" $(ash_mod_prop $module BG)
 }
 
 
