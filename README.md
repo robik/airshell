@@ -45,9 +45,10 @@ Name        | Description
 
 ### Modules
 
-Airshell allows to extend functionality with _modules_. Modules can be freely placed on prompt-bar and have distinct configuration. Airshell comes with few builtin modules, such as `user` which prints username, `git` with prints branch name if available etc. All modules should be kept in `$ASH_PREFIX/modules` directory.
+Airshell allows to extend functionality with _modules_. Modules can be freely placed on prompt-bar and have distinct configuration. 
+Airshell comes with few builtin modules, such as `user` which prints username, `git` which prints current branch name if available etc. All modules are kept in `$ASH_PREFIX/modules` directory.
 
-Module's foreground and background can be changed in `MODULE_{name}_FG` and `MODULE_{name}_BG` variables respectively, where `{name}` should be replaced with uppercase name of the module. Described in detail in [Customization](#Customization) section.
+Module's foreground and background can be changed in `MODULE_{name}_FG` and `MODULE_{name}_BG` variables respectively, where `{name}` is uppercase name of the module. Described in detail in [Customization](#Customization) section.
 
 A module may not be rendered if some internal condition is not met. In such case whole module block is skipped. Example of such module is `git`, which is rendered only if current directory is in a valid `git` repository.
 
@@ -82,11 +83,11 @@ Sequence          | Result
 `\e[38;2;{r};{g};{b}m` | Changes foreground color, where `{[rgb]}` is color value between `0` and `255`.
 `\e[48;5;{r};{g};{b}m` | Changes background color, where `{[rgb]}` is color value between `0` and `255`.
 
-All Airshell options must be global variables. They can be defined/overriden in either `airshell.bash` or in `$ASH_PREFIX/theme` files.
 
 __Configuration variables__
 
-_All `{name}` slugs below must be replaced with uppercase module name_
+Airshell options must be global variables. They can be defined/overriden in either `airshell.bash` or in `$ASH_PREFIX/theme` files.
+All `{name}` slugs below represent uppercase module name.
 
 Variable name         | Variable description
 ----------------------|----------------------------------------------------
