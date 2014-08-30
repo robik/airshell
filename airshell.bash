@@ -14,6 +14,9 @@ if [ -f /etc/bash.bashrc ]; then
     source /etc/bash.bashrc
 fi
 
+# Airshell prefix without trailing slash
+ASH_PREFIX="$HOME/.config/airshell"
+
 ash_check_powerline_symbols()
 {
     local found_font=0
@@ -27,7 +30,7 @@ ash_check_powerline_symbols()
         fi
     done
     
-    if [[ ! -f "$HOME/.config/airshell/config/ignore-symbols-question" && $found_font -eq 0 ]]; then
+    if [[ ! -f "$ASH_PREFIX/config/ignore-symbols-question" && $found_font -eq 0 ]]; then
         local answer=""
         printf "\e[1;33mWarning\e[0m: Powerline symbols have not been found!\n"
         printf "Those symbols are not required, however you may see weird characters command prompt. "
@@ -41,8 +44,8 @@ ash_check_powerline_symbols()
                 ;;
                 
             'i'|'I')
-                mkdir -p "$HOME/.config/airshell/config"
-                touch "$HOME/.config/airshell/config/ignore-symbols-question"
+                mkdir -p "$ASH_PREFIX/config"
+                touch "$ASH_PREFIX/config/ignore-symbols-question"
                 echo "Ignored!"
                 ;;
                 
@@ -139,14 +142,14 @@ MODULE_DATE_BG="5;236"
 
 TERM_RESET="\e[0m"
 
-if [ -f ~/.config/airshell/theme ]; then
-    source ~/.config/airshell/theme
+if [ -f $ASH_PREFIX/theme ]; then
+    source $ASH_PREFIX/theme
 fi
 
 # Include external modules
-if [ -d ~/.config/airshell/modules ]; then
-    for file in $(ls ~/.config/airshell/modules | egrep '\.(ba)?sh$'); do
-        source "$HOME/.config/airshell/modules/$file"
+if [ -d $ASH_PREFIX/modules ]; then
+    for file in $(ls $ASH_PREFIX/modules | egrep '\.(ba)?sh$'); do
+        source "$ASH_PREFIX/modules/$file"
     done
 fi
 
