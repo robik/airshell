@@ -16,6 +16,7 @@ fi
 
 # Airshell prefix without trailing slash
 ASH_PREFIX="$HOME/.config/airshell"
+mkdir -p $ASH_PREFIX
 
 ash_check_powerline_symbols()
 {
@@ -62,6 +63,7 @@ ash_install_powerline_symbols()
     pushd /tmp
     mkdir -p $HOME/.fonts
     mkdir -p $HOME/.config/fontconfig/conf.d/
+    
     # As specified in https://powerline.readthedocs.org/en/latest/installation/linux.html#font-installation
     [ ! -f "PowerlineSymbols.otf" ] && wget https://github.com/Lokaltog/powerline/raw/develop/font/PowerlineSymbols.otf
     [ ! -f "10-powerline-symbols.conf" ] && wget https://github.com/Lokaltog/powerline/raw/develop/font/10-powerline-symbols.conf
@@ -88,12 +90,6 @@ ash_copy_module_colors()
     
     eval "MODULE_${target^^}_BG=\"\$MODULE_${source^^}_BG\""
     eval "MODULE_${target^^}_FG=\"\$MODULE_${source^^}_FG\""
-}
-
-REGISTERED_MODULES=()
-ash_register_module()
-{
-    REGISTERED_MODULES+=("$1")
 }
 
 # Arrays delimeting components in header bar
@@ -153,6 +149,7 @@ if [ -d $ASH_PREFIX/modules ]; then
     done
 fi
 
+REGISTERED_MODULES=( $(declare -F | awk -e '/ash_module_/ { print substr($3, 12); }') )
 # Validate module list
 for module in ${LEFT_MODULES[@]} ${RIGHT_MODULES[@]}; do
     echo "${REGISTERED_MODULES[@]}" | grep -q "$module"
@@ -227,7 +224,7 @@ ash_build_left_side()
         local module="${LEFT_MODULES[$i]}"
         eval "ash_module_$module"
         
-        [ "$MODULE_RESULT" = "" ] && continue
+        [ "$MODULE_LENGTH" = "-1" ] && continue
         module_results+=("$MODULE_RESULT")
         modules+=("$module")
         ((modules_len++))
@@ -264,7 +261,7 @@ ash_build_right_side()
         local module="${RIGHT_MODULES[$i]}"
         eval "ash_module_$module"
         
-        [ "$MODULE_RESULT" = "" ] && continue
+        [ "$MODULE_LENGTH" = "-1" ] && continue
         module_results+=("$MODULE_RESULT")
         module_lengths+=("$MODULE_LENGTH")
         modules+=("$module")
