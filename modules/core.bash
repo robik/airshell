@@ -1,14 +1,5 @@
 #!/bin/bash
 
-ash_register_module "ssh"
-ash_register_module "user"
-ash_register_module "host"
-ash_register_module "path"
-ash_register_module "user_char"
-ash_register_module "git"
-ash_register_module "venv"
-ash_register_module "date"
-
 ash_module_ssh()
 {
     if [ -n "$SSH_CLIENT" ]; then
