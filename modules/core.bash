@@ -33,13 +33,17 @@ ash_module_user_char()
     fi
 }
 
-ash_module_git()
+ash_validate_module_git()
 {
-    if [[ ! -x $(which git) ]]; then
-        ash_return_none;
-        return;
+    if [[ $? && ! -x "$(which git)" ]]; then
+        printf "\e[1;31mConfiguration Error\e[0m: Git command not found. Either install git or remove git module.\n"
+        return $ASH_VALIDATION_FAILURE
     fi
-    
+    return $ASH_VALIDATION_SUCCESS
+}
+
+ash_module_git()
+{   
     local res="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
     if [ "$res" != "" ]; then
         ash_return_text "$BRANCH_CHAR $res" `expr ${#res} + 2`

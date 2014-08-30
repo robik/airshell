@@ -99,6 +99,7 @@ BRANCH_CHAR="\ue0a0"
 
 LEFT_MODULES=(ssh user path)
 RIGHT_MODULES=(git venv date)
+IGNORED_MODULES=()
 PS1_MODULE="user_char"
 PS2_CHAR="~"
 COLOR_HEADER_BG="5;234"
@@ -150,18 +151,23 @@ if [ -d $ASH_PREFIX/modules ]; then
 fi
 
 REGISTERED_MODULES=( $(declare -F | awk -e '/ash_module_/ { print substr($3, 12); }') )
+ASH_VALIDATION_SUCCESS=0
+ASH_VALIDATION_FAILURE=1
 # Validate module list
 for module in ${LEFT_MODULES[@]} ${RIGHT_MODULES[@]}; do
     echo "${REGISTERED_MODULES[@]}" | grep -q "$module"
-    if [[ ! $? -eq 0 ]]; then
+    if [[ $? -eq 0 ]]; then
+        if [ "$(type -t ash_validate_module_$module)" = "function" ]; then
+            eval "ash_validate_module_$module"
+            
+            if [ $? -eq $ASH_VALIDATION_FAILURE ]; then
+                IGNORED_MODULES+=("$module")
+            fi
+        fi
+    else
         printf "\e[1;31mError\e[0m: Unknown module '$module' is used\n"
     fi
 done
-
-echo ${LEFT_MODULES[@]} ${RIGHT_MODULES[@]} | grep -q git
-if [[ $? && ! -x "$(which git)" ]]; then
-    printf "\e[1;31mConfiguration Error\e[0m: Git command not found. Either install git or remove git module.\n"
-fi
 
 # Used for restoring
 ORIGINAL_PS1="$PS1"
@@ -222,6 +228,10 @@ ash_build_left_side()
     # Filter out empty modules
     for ((i=0;i<${#LEFT_MODULES[@]};i++)); do
         local module="${LEFT_MODULES[$i]}"
+        
+        echo ${IGNORED_MODULES[@]} | grep -q $module
+        [ $? -eq 0 ] && continue
+        
         eval "ash_module_$module"
         
         [ "$MODULE_LENGTH" = "-1" ] && continue
@@ -259,6 +269,10 @@ ash_build_right_side()
     # Filter out empty modules
     for ((i=${#RIGHT_MODULES[@]}-1;i>=0;i--)); do
         local module="${RIGHT_MODULES[$i]}"
+        
+        echo ${IGNORED_MODULES[@]} | grep -q $module
+        [ $? -eq 0 ] && continue
+        
         eval "ash_module_$module"
         
         [ "$MODULE_LENGTH" = "-1" ] && continue
