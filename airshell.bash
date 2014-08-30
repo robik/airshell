@@ -8,8 +8,13 @@
 
 # Airshell prefix without trailing slash
 if [ -z "$ASH_PREFIX" ]; then
-    ASH_PREFIX="$HOME/.config/airshell"
+    if [ -d "$HOME/.config/airshell" ]; then
+        ASH_PREFIX="$HOME/.config/airshell"
+    else
+        ASH_PREFIX="."
+    fi
 fi
+
     
 # If not interactive, skip
 [ -z "$PS1" ] && return
