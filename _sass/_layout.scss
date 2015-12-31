@@ -1,0 +1,72 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    font-size: 15px;
+}
+
+hr {
+    margin: 16px 0;
+}
+
+.container {
+    margin: 0 auto;
+}
+
+h2,h3,h4,h5,h6 {
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 400;
+}
+
+a, a:focus, a:visited {
+    color: #9b59b6;
+}
+a:hover {
+    color: #673AB7;
+    text-decoration: none;
+}
+
+
+pre {
+    border-radius: 0;
+}
+
+code {
+    background-color: #efefef;
+    color: #808080;
+    border-radius: 0;
+    padding: 3px;
+}
+
+table {
+    width: 100%;
+}
+
+
+.main-container .content {
+    padding: 15px;
+}
+
+.content h3:first-child {
+    margin-top: 0;
+}
+
+.content p {
+    line-height: 1.5em;
+}
+
+.content h3 {
+    text-transform: uppercase;
+    color: #666;
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+
+.footer-container {
+    color: #6f6f6f;
+    margin-top: 15px;
+    border-top: 1px solid #e5e5e5;
+    padding: 25px 15px;
+}

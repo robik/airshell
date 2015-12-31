@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Configuration</title>
+    <meta name="description" content="Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.
+">
+
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300|Lato:400,100,300,700' rel='stylesheet' type='text/css'>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha256-3dkvEK0WLHRJ7/Csr0BZjAWxERc5WH7bdeUya2aXxdU= sha512-+L4yy6FRcDGbXJ9mPG8MT/3UCDzwR9gPeyFNMCtInsol++5m3bk2bXWKdZjvybmohrAsn3Ua5x8gfLnbE1YkOg==" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha256-7s5uDGW3AHqw6xtJmNNtr+OBRJUlgkNJEo78P4b0yRw= sha512-nNo+yCHEyn0smMxSswnf/OnX6/KwJuZTlNZBjauKhTK0c+zT+q5JOCx0UFhXQ6rJR9jg6Es8gPuD2uZcYDLqSw=="
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="/airshell/assets/main.css">
+  </head>
+
+  <body>
+    <div class="header">
+      <div class="container">
+        <h1><a href="/airshell/"><i class="fa fa-terminal"></i> AirShell</a></h1>
+        <h5>Bash prompt made awesome</h5>
+      </div>
+    </div>
+
+    <div class="subheader">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-10 col-md-offset-1">
+            <h2>Configuration</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-10 col-md-offset-1 content">
+          <h3 id="contents">Contents</h3>
+
+<ul id="markdown-toc">
+  <li><a href="#contents" id="markdown-toc-contents">Contents</a></li>
+  <li><a href="#introduction" id="markdown-toc-introduction">Introduction</a></li>
+  <li><a href="#commands" id="markdown-toc-commands">Commands</a>    <ul>
+      <li><a href="#load-theme" id="markdown-toc-load-theme"><strong><code class="highlighter-rouge">load-theme</code></strong></a></li>
+      <li><a href="#load-module" id="markdown-toc-load-module"><strong><code class="highlighter-rouge">load-module</code></strong></a></li>
+      <li><a href="#load-all-modules" id="markdown-toc-load-all-modules"><strong><code class="highlighter-rouge">load-all-modules</code></strong></a></li>
+      <li><a href="#set" id="markdown-toc-set"><strong><code class="highlighter-rouge">set</code></strong></a></li>
+      <li><a href="#row" id="markdown-toc-row"><strong><code class="highlighter-rouge">row</code></strong></a></li>
+      <li><a href="#prefix" id="markdown-toc-prefix"><strong><code class="highlighter-rouge">prefix</code></strong></a></li>
+      <li><a href="#component-style" id="markdown-toc-component-style"><strong><code class="highlighter-rouge">component-style</code></strong></a></li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="introduction">Introduction</h3>
+
+<p>Before describing airshell configuration, you must know how everything is organised.</p>
+
+<p>Prompt consists of two parts: rows and prefix. Both aggregate components,
+which are those colorful widgets you’ve might seen on previous page.
+Rows have two “anchors” you can add components to, left and right.
+Prefix can have components only on left side, as it is the part that is displayed on the same line as input.</p>
+
+<p>Components are provided by modules, which are essentially a collection of components.
+To use a component, you must load the containing module.
+The <code class="highlighter-rouge">core</code> module is loaded automatically, so you have few simple components available by default.</p>
+
+<p>Components can be attached a style, which defines its appearance. Styles are provided by themes, which, just like
+modules must be loaded beforehand. And just like <code class="highlighter-rouge">core</code> module, <code class="highlighter-rouge">default</code> theme is loaded automatically.
+When not attaching a style manually, a theme definition order is used.
+That is, component in row will be attached a style from theme in order it was defined
+(this repeats across rows and anchors). Components on right anchor are styled
+from right to left (this rule includes hidden components).</p>
+
+<p>Airshell, themes and components can define configurable properties, which you can change.
+All custom configuration overrides should be kept in <code class="highlighter-rouge">~/.airshellrc.sh</code> file. It is loaded every time
+AirShell is started. The file is a bash source, so make sure its syntax is correct.</p>
+
+<div class="alert alert-info" role="alert">
+    <strong>Heads up!</strong>
+    You can change location and name of the <code>.airshellrc.sh</code> file.
+
+    <p>To do this, simply set <code>AIRSH_RCFILE</code> variable to location of new file to load. Make sure you set it
+    <strong>before</strong> actually loading <code>airshell.sh</code></p>
+</div>
+
+<p>To simplify configuration, AirShell implements a small DSL (domain specific language) for configuration files.
+Before the file is loaded, new helpers are added for use in configuration and later removed, to not pollute the global “scope”.
+So don’t be suprised when you try to use them in your terminal and it doesn’t work (there’s another set of helpers to use in terminal, however).</p>
+
+<p>Here is an example configuration file to give you and idea how it looks like:</p>
+
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="c"># load-theme name</span>
+load-module git
+
+<span class="nb">set </span>auto-start <span class="nb">true
+set </span>newline <span class="nb">true
+set </span>right-delim <span class="s2">"</span><span class="se">\u</span><span class="s2">e0b2"</span>
+
+row <span class="o">[</span> username hostname <span class="o">]</span> <span class="o">[</span> git-branch <span class="o">]</span>
+row <span class="o">[</span> path <span class="o">]</span>
+prefix <span class="o">[</span> user-char <span class="o">]</span>
+
+component-style username orange</code></pre></figure>
+
+<hr />
+
+<div class="row block-nav-inline">
+  <div class="col-md-6">
+    <div class="media media-feature">
+      <div class="media-left">
+        <a href="/airshell/module/core/"><i class="fa fa-4x fa-cube"></i></a>
+      </div>
+      <div class="media-body">
+        <h4 class="media-heading">
+          <a href="/airshell/module/core/">Module <code>core</code></a>
+        </h4>
+        <p>Browse <code>core</code> module possible properties and components.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="media media-feature">
+      <div class="media-left">
+        <a href="/airshell/theme/default/"><i class="fa fa-4x fa-paint-brush"></i></a>
+      </div>
+      <div class="media-body">
+        <h4 class="media-heading">
+          <a href="/airshell/theme/default/">Theme <code>default</code></a>
+        </h4>
+        <p>Browse <code>default</code> theme exported styles!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<h3 id="commands">Commands</h3>
+
+<h4 id="load-theme"><strong><code class="highlighter-rouge">load-theme</code></strong></h4>
+
+<p><code class="highlighter-rouge">load-theme name</code></p>
+
+<p>Loads theme <code class="highlighter-rouge">name</code>. This function, however, does not enable it.
+Theme is loaded from <code class="highlighter-rouge">$AIRSH_THEMES_DIR/name.sh</code>, which with default
+configuration expands to <code class="highlighter-rouge">$AIRSH_INSTALL_DIR/themes/name.sh</code>.
+Theme <code class="highlighter-rouge">default</code> is loaded automatically.</p>
+
+<h4 id="load-module"><strong><code class="highlighter-rouge">load-module</code></strong></h4>
+
+<p><code class="highlighter-rouge">load-module name</code></p>
+
+<p>Loads modules with names name (resolved to <code class="highlighter-rouge">$AIRSH_MODULES_DIR/name.sh</code>).
+Module <code class="highlighter-rouge">core</code> is loaded automatically.</p>
+
+<h4 id="load-all-modules"><strong><code class="highlighter-rouge">load-all-modules</code></strong></h4>
+
+<p><code class="highlighter-rouge">load-all-modules</code></p>
+
+<p>Loads all modules that are present in <code class="highlighter-rouge">$AIRSH_MODULES_DIR</code> directory.</p>
+
+<h4 id="set"><strong><code class="highlighter-rouge">set</code></strong></h4>
+
+<p><code class="highlighter-rouge">set name value</code></p>
+
+<p>Use this function to set global configuration properties. Property names are case insensitive and
+ dashes (<code class="highlighter-rouge">-</code>) are replaced with underscores (<code class="highlighter-rouge">_</code>).</p>
+
+<h4 id="row"><strong><code class="highlighter-rouge">row</code></strong></h4>
+
+<p><code class="highlighter-rouge">row [ left-component left-component... ] [ right-component right-component... ]</code></p>
+
+<p>Creates new row displayed before input. <code class="highlighter-rouge">left-components</code> is list of component
+names separated by space. <code class="highlighter-rouge">right-components</code> (with square brackes) is optional and specifies components
+displayed on right side.</p>
+
+<p>Square brackets are required before and after list of components, and they
+ must be surrounded by space!</p>
+
+<p>Just as properties, component names are case insensitive and
+ dashes (<code class="highlighter-rouge">-</code>) are replaced with underscores (<code class="highlighter-rouge">_</code>).</p>
+
+<h4 id="prefix"><strong><code class="highlighter-rouge">prefix</code></strong></h4>
+
+<p><code class="highlighter-rouge">prefix [ component component... ]</code></p>
+
+<p>Sets components to be displayed in the same line as user input.</p>
+
+<p>Square brackets are not required and are only for aesthics. If present they
+ must be surrounded by space!</p>
+
+<h4 id="component-style"><strong><code class="highlighter-rouge">component-style</code></strong></h4>
+
+<p><code class="highlighter-rouge">component-style component style</code></p>
+
+<p>Tells airshell that <code class="highlighter-rouge">component</code> should be styled with <code class="highlighter-rouge">style</code>.
+If style is not available component won’t be styled at alls.</p>
+
+<div class="alert alert-info" role="alert">
+    <strong>Heads up!</strong>
+    Component style overrides must be placed after <code>load-theme</code> directive.
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="block-nav">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <div class="media media-feature">
+          <div class="media-left">
+            <a href="/airshell/configuration/"><i class="fa fa-4x fa-wrench"></i></a>
+          </div>
+          <div class="media-body">
+            <h4 class="media-heading">
+              <a href="/airshell/configuration/">Configure</a>
+            </h4>
+            <p>You make it how you love it. Configuration is made simple.
+              <a href="/airshell/configuration/">Check out configuration guide &raquo;</a>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="media media-feature">
+          <div class="media-left">
+            <a href="/airshell/extending/"><i class="fa fa-4x fa-code"></i></a>
+          </div>
+          <div class="media-body">
+            <h4 class="media-heading">
+              <a href="/airshell/extending/">Component creation</a>
+            </h4>
+            <p>
+              Want to pimp your prompt your way? You may want to check out
+              <a href="/airshell/extending/">modules guide</a>
+              to see how easy is it to implement one!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="media media-feature">
+          <div class="media-left">
+            <a href="/airshell/theme-builder/"><i class="fa fa-4x fa-paint-brush"></i></a>
+          </div>
+          <div class="media-body">
+            <h4 class="media-heading">
+              <a href="/airshell/theme-builder/">Theme creation</a>
+            </h4>
+            <p>
+              Don't like default theme? Give our <a href="/airshell/theme-builder/">theme
+              builder</a> a spin!!1
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="media media-feature">
+          <div class="media-left">
+            <a href="https://github.com/robik/airshell/issues" target="_blank"><i class="fa fa-4x fa-bug"></i></a>
+          </div>
+          <div class="media-body">
+            <h4 class="media-heading"><a href="https://github.com/robik/airshell/issues" target="_blank">Found a bug?</a></h4>
+            <p>
+              Visit our <a href="https://github.com/robik/airshell/issues" target="_blank">issue tracker thingy</a> and help us
+              squash it!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <footer>
+      <div class="container footer-container">
+        <div class="row">
+          <div class="col-md-8">
+            <p>
+              Made with <i class="fa fa-heart"></i> by <a href="https://github.com/robik">robik</a>
+              |
+              This awesome header image was made by <a href="http://wegraphics.net/downloads/free-ultimate-blurred-background-pack/">WeGraphics</a>.
+            </p>
+          </div>
+
+          <div class="col-md-4 text-right">
+            <a href=""><i class="fa fa-2x fa-github"></i></a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </body>
+</html>
