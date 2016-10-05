@@ -157,7 +157,7 @@ ash_fill_row()
     for ((i=0;i<$cols;i++)); do
         printf " "
     done
-    printf "\e[199D"
+    printf "\e[%sD" $cols
 }
 
 ash_build_left_side()
